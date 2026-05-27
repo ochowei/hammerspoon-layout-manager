@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 使用者個人的 layout 資料（每個人不一樣，不該 commit）
+layouts/*.json
+!layouts/.gitkeep
+
+# 編輯器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Hammerspoon 自身產生的檔案（萬一你把 ~/.hammerspoon 整個變成 git repo）
+.hammerspoon.log
+console.log
