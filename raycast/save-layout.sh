@@ -21,4 +21,4 @@ if [ -z "$NAME" ]; then
 fi
 
 # URL encode (簡單版，名稱不含特殊字元就 OK)
-open "hammerspoon://saveLayout?name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$NAME")"
+open "hammerspoon://savelayout?name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$NAME")"

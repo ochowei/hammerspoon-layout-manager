@@ -20,4 +20,4 @@ if [ -z "$NAME" ]; then
   exit 1
 fi
 
-open "hammerspoon://loadLayout?name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$NAME")"
+open "hammerspoon://loadlayout?name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$NAME")"

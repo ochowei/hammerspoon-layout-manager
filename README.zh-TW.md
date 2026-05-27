@@ -73,10 +73,10 @@ git clone https://github.com/<你的帳號>/hammerspoon-layout-manager.git ~/.ha
 ### URL Scheme（給 Raycast / Shortcuts / 其他工具）
 
 ```bash
-open "hammerspoon://saveLayout?name=work"
-open "hammerspoon://loadLayout?name=work"
-open "hammerspoon://listLayouts"
-open "hammerspoon://deleteLayout?name=work"
+open "hammerspoon://savelayout?name=work"
+open "hammerspoon://loadlayout?name=work"
+open "hammerspoon://listlayouts"
+open "hammerspoon://deletelayout?name=work"
 ```
 
 ### 範例情境

@@ -13,4 +13,4 @@
 # @raycast.description 顯示所有已儲存的 layout
 # @raycast.author You
 
-open "hammerspoon://listLayouts"
+open "hammerspoon://listlayouts"

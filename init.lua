@@ -86,9 +86,9 @@ end)
 -- URL handler 註冊（給 Raycast 用）
 -- ============================================================
 -- 註冊後可以這樣呼叫：
---   open "hammerspoon://saveLayout?name=work"
---   open "hammerspoon://loadLayout?name=work"
---   open "hammerspoon://listLayouts"
+--   open "hammerspoon://savelayout?name=work"
+--   open "hammerspoon://loadlayout?name=work"
+--   open "hammerspoon://listlayouts"
 urlHandler.register(layoutManager)
 
 -- 啟動完成提示

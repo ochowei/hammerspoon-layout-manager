@@ -75,10 +75,10 @@ git clone https://github.com/<your-username>/hammerspoon-layout-manager.git ~/.h
 For Raycast, Shortcuts.app, or any other launcher:
 
 ```bash
-open "hammerspoon://saveLayout?name=work"
-open "hammerspoon://loadLayout?name=work"
-open "hammerspoon://listLayouts"
-open "hammerspoon://deleteLayout?name=work"
+open "hammerspoon://savelayout?name=work"
+open "hammerspoon://loadlayout?name=work"
+open "hammerspoon://listlayouts"
+open "hammerspoon://deletelayout?name=work"
 ```
 
 ### Example workflow
