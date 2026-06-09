@@ -169,7 +169,7 @@
     <div class="content">
       <div class="form-group">
         <label for="layout-name">Layout 名稱</label>
-        <input type="text" id="layout-name" placeholder="例如: Work, Coding, Browsing..." autofocus>
+        <input type="text" id="layout-name" placeholder="例如: Work, Coding, Browsing..." value="{{DEFAULT_NAME}}" autofocus>
         <div id="error-msg" class="error-msg">請輸入 Layout 名稱</div>
         <div id="warning-msg" class="warning-msg">此名稱已存在，儲存將覆蓋舊配置</div>
       </div>
@@ -296,6 +296,11 @@
         onCancel();
       }
     });
+
+    // 若已有預設名稱（從 Raycast 傳入），觸發重名檢測
+    if (inputField.value.trim()) {
+      inputField.dispatchEvent(new Event('input'));
+    }
 
     function onCancel() {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hammerspoon) {

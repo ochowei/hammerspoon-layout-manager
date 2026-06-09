@@ -17,10 +17,10 @@ function M.register(layoutManager)
   hs.urlevent.bind("savelayout", function(eventName, params)
     local name = params.name
     if not name or name == "" then
-      hs.alert.show("缺少 name 參數")
+      layoutManager.showSaveDialog()
       return
     end
-    layoutManager.save(name)
+    layoutManager.showSaveDialog(name)
   end)
 
   -- loadlayout

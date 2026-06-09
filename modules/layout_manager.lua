@@ -326,7 +326,7 @@ end
 
 local activeWebview = nil
 
-function M.showSaveDialog()
+function M.showSaveDialog(defaultName)
   -- 如果已有開啟的視窗，先將其關閉
   if activeWebview then
     activeWebview:delete()
@@ -370,8 +370,11 @@ function M.showSaveDialog()
   local windowsJson = escapeJSONForHTML(json.encode(allWindows))
   local layoutsJson = escapeJSONForHTML(json.encode(existingLayouts))
 
+  local defaultNameSafe = escapeJSONForHTML(defaultName or "")
+
   templateContent = plainReplace(templateContent, "{{WINDOWS_JSON}}", windowsJson)
   templateContent = plainReplace(templateContent, "{{LAYOUTS_JSON}}", layoutsJson)
+  templateContent = plainReplace(templateContent, "{{DEFAULT_NAME}}", defaultNameSafe)
 
   -- 預先計算置中座標，避免 hswindow() 的非同步 race condition
   local mainScreen = hs.screen.mainScreen() or hs.screen.primaryScreen()
