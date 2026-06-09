@@ -17,3 +17,6 @@ layouts/*.json
 # Hammerspoon 自身產生的檔案（萬一你把 ~/.hammerspoon 整個變成 git repo）
 .hammerspoon.log
 console.log
+
+# Environment variables file
+.env
