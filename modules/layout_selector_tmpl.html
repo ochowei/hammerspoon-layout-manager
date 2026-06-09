@@ -268,7 +268,8 @@
       errorMsg.style.display = 'none';
       const name = inputField.value.trim();
       const safeName = name.replace(/[\/\\?*%&|^`;<>:]/g, "");
-      if (safeName && existingLayouts.includes(safeName)) {
+      const isDuplicate = existingLayouts.some(layout => layout.toLowerCase() === safeName.toLowerCase());
+      if (safeName && isDuplicate) {
         warningMsg.style.display = 'block';
       } else {
         warningMsg.style.display = 'none';
@@ -305,7 +306,8 @@
         return;
       }
 
-      if (existingLayouts.includes(safeName)) {
+      const isDuplicate = existingLayouts.some(layout => layout.toLowerCase() === safeName.toLowerCase());
+      if (isDuplicate) {
         const confirmOverwrite = confirm("此配置已存在，是否要覆蓋儲存？");
         if (!confirmOverwrite) {
           return;
