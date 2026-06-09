@@ -20,19 +20,9 @@ local urlHandler   = require("modules.url_handler")
 -- 修飾鍵組合：cmd + alt (Option)
 local hyper = {"cmd", "alt"}
 
--- Cmd + Alt + S：儲存當前 layout（會彈出輸入框問名稱）
+-- Cmd + Alt + S：開啟儲存 Layout 選擇器對話框
 hs.hotkey.bind(hyper, "S", function()
-  hs.focus()
-  local button, name = hs.dialog.textPrompt(
-    "儲存 Layout",
-    "請輸入 layout 名稱：",
-    "",
-    "儲存",
-    "取消"
-  )
-  if button == "儲存" and name and name ~= "" then
-    layoutManager.save(name)
-  end
+  layoutManager.showSaveDialog()
 end)
 
 -- Cmd + Alt + L：載入 layout（會彈出選單讓你選）
