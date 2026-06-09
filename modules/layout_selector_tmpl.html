@@ -12,6 +12,7 @@
       font-size: 14px;
       user-select: none;
       overflow: hidden;
+      color-scheme: dark;
     }
     .container {
       display: flex;
@@ -185,10 +186,14 @@
     </div>
   </div>
 
+  <!-- In HTML body -->
+  <script id="windows-json" type="application/json">{{WINDOWS_JSON}}</script>
+  <script id="layouts-json" type="application/json">{{LAYOUTS_JSON}}</script>
+
   <script>
     // Lua 注入的佔位符
-    const windows = {{WINDOWS_JSON}};
-    const existingLayouts = {{LAYOUTS_JSON}};
+    const windows = JSON.parse(document.getElementById('windows-json').textContent);
+    const existingLayouts = JSON.parse(document.getElementById('layouts-json').textContent);
 
     // 初始化渲染
     const listContainer = document.getElementById('window-list');
@@ -272,7 +277,7 @@
 
     // 按下 Enter 鍵自動儲存
     inputField.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.isComposing) {
         onSave();
       }
     });
@@ -300,7 +305,7 @@
         return;
       }
 
-      if (warningMsg.style.display === 'block') {
+      if (existingLayouts.includes(safeName)) {
         const confirmOverwrite = confirm("此配置已存在，是否要覆蓋儲存？");
         if (!confirmOverwrite) {
           return;
@@ -322,7 +327,7 @@
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hammerspoon) {
         window.webkit.messageHandlers.hammerspoon.postMessage({
           action: "save",
-          name: name,
+          name: safeName,
           selected: selected
         });
       }
