@@ -128,6 +128,10 @@
       cursor: pointer;
       font-weight: 500;
     }
+    button:focus-visible {
+      outline: 2px solid #007acc;
+      outline-offset: 2px;
+    }
     .btn-cancel {
       background: #32323d;
       color: #fff;
@@ -240,6 +244,7 @@
         checkbox.checked = true;
         checkbox.dataset.app = win.app;
         checkbox.dataset.title = win.title || '';
+        checkbox.dataset.zIndex = win.z_index;
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = win.title || '(無標題視窗)';
@@ -287,10 +292,19 @@
 
     function onSave() {
       const name = inputField.value.trim();
-      if (!name) {
+      const safeName = name.replace(/[\/\\?*%&|^`;<>:]/g, "");
+      if (!safeName) {
+        errorMsg.textContent = "請輸入有效的 Layout 名稱（不可僅包含非法字元）";
         errorMsg.style.display = 'block';
         inputField.focus();
         return;
+      }
+
+      if (warningMsg.style.display === 'block') {
+        const confirmOverwrite = confirm("此配置已存在，是否要覆蓋儲存？");
+        if (!confirmOverwrite) {
+          return;
+        }
       }
 
       const selected = [];
@@ -299,7 +313,8 @@
         if (cb.checked) {
           selected.push({
             app: cb.getAttribute('data-app'),
-            title: cb.getAttribute('data-title')
+            title: cb.getAttribute('data-title'),
+            z_index: parseInt(cb.getAttribute('data-z-index'), 10)
           });
         }
       });
