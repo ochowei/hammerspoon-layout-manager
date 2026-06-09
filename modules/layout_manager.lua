@@ -426,4 +426,107 @@ function M.showSaveDialog(defaultName)
   end)
 end
 
+-- ============================================================
+-- Webview 載入對話視窗
+-- ============================================================
+function M.showLoadDialog()
+  -- 如果已有開啟的視窗，先將其關閉
+  if activeWebview then
+    activeWebview:delete()
+    activeWebview = nil
+  end
+
+  local existingLayouts = M.list()
+  if #existingLayouts == 0 then
+    hs.alert.show("尚無已儲存的 layout")
+    return
+  end
+
+  -- 讀取每個 layout 的詳細資訊（視窗數量、建立時間）
+  local layoutDetails = {}
+  for _, name in ipairs(existingLayouts) do
+    local entry = { name = name }
+    local file = io.open(layoutPath(name), "r")
+    if file then
+      local content = file:read("*all")
+      file:close()
+      local data = json.decode(content)
+      if data then
+        entry.windowCount = data.windows and #data.windows or 0
+        entry.createdAt = data.created_at
+      end
+    end
+    table.insert(layoutDetails, entry)
+  end
+
+  -- 動態取得範本檔案的路徑
+  local currentFile = debug.getinfo(1).source:sub(2)
+  local currentDir = currentFile:match("(.+)/[^/]+$") or "."
+  local templatePath = currentDir .. "/layout_loader_tmpl.html"
+
+  local templateFile = io.open(templatePath, "r")
+  if not templateFile then
+    hs.alert.show("無法讀取載入器範本：" .. templatePath)
+    return
+  end
+  local templateContent = templateFile:read("*all")
+  templateFile:close()
+
+  local layoutsJson = escapeJSONForHTML(json.encode(layoutDetails))
+  templateContent = plainReplace(templateContent, "{{LAYOUTS_JSON}}", layoutsJson)
+
+  -- 預先計算置中座標
+  local mainScreen = hs.screen.mainScreen() or hs.screen.primaryScreen()
+  local screenFrame = mainScreen and mainScreen:frame() or { x = 0, y = 0, w = 1920, h = 1080 }
+  local w, h = 500, 420
+  local x = screenFrame.x + (screenFrame.w - w) / 2
+  local y = screenFrame.y + (screenFrame.h - h) / 2
+  local rect = hs.geometry.rect(x, y, w, h)
+
+  -- 設定 usercontent controller 處理來自 JavaScript 的訊息
+  local uc = hs.webview.usercontent.new("hammerspoon")
+  uc:setCallback(function(msg)
+    if not msg or not msg.body then return end
+    local body = msg.body
+    if body.action == "cancel" then
+      if activeWebview then
+        activeWebview:delete()
+        activeWebview = nil
+      end
+    elseif body.action == "load" then
+      if activeWebview then
+        activeWebview:delete()
+        activeWebview = nil
+      end
+      if body.name and body.name ~= "" then
+        M.load(body.name)
+      end
+    elseif body.action == "delete" then
+      if body.name and body.name ~= "" then
+        M.delete(body.name)
+      end
+    end
+  end)
+
+  -- 初始化 hs.webview，傳入 usercontent controller
+  activeWebview = hs.webview.new(rect, { developerExtrasEnabled = true }, uc)
+  activeWebview:windowStyle(hs.webview.windowMasks.borderless)
+  activeWebview:closeOnEscape(true)
+  activeWebview:html(templateContent)
+  activeWebview:level(hs.drawing.windowLevels.floating)
+  activeWebview:allowTextEntry(true)
+
+  activeWebview:show()
+
+  -- 延遲取得焦點
+  hs.timer.doAfter(0.1, function()
+    if activeWebview then
+      local win = activeWebview:hswindow()
+      if win then
+        win:focus()
+      end
+    end
+  end)
+end
+
 return M

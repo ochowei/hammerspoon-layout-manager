@@ -25,12 +25,7 @@ function M.register(layoutManager)
 
   -- loadlayout
   hs.urlevent.bind("loadlayout", function(eventName, params)
-    local name = params.name
-    if not name or name == "" then
-      hs.alert.show("缺少 name 參數")
-      return
-    end
-    layoutManager.load(name)
+    layoutManager.showLoadDialog()
   end)
 
   -- listlayouts
