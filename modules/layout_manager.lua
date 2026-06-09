@@ -381,24 +381,19 @@ function M.showSaveDialog()
   local y = screenFrame.y + (screenFrame.h - h) / 2
   local rect = hs.geometry.rect(x, y, w, h)
 
-  -- 初始化 hs.webview
-  activeWebview = hs.webview.new(rect, { developerExtrasEnabled = true })
-  activeWebview:windowStyle(hs.webview.windowMasks.borderless)
-  activeWebview:closeOnEscape(true)
-  activeWebview:html(templateContent)
-  activeWebview:level(hs.drawing.windowLevels.floating)
-
-  -- 設定 callback 處理來自 JavaScript 的訊息
-  activeWebview:userCallback(function(msg)
-    if not msg then return end
-    if msg.action == "cancel" then
+  -- 設定 usercontent controller 處理來自 JavaScript 的訊息
+  local uc = hs.webview.usercontent.new("hammerspoon")
+  uc:setCallback(function(msg)
+    if not msg or not msg.body then return end
+    local body = msg.body
+    if body.action == "cancel" then
       if activeWebview then
         activeWebview:delete()
         activeWebview = nil
       end
-    elseif msg.action == "save" then
-      if msg.name and msg.name ~= "" then
-        M.save(msg.name, msg.selected)
+    elseif body.action == "save" then
+      if body.name and body.name ~= "" then
+        M.save(body.name, body.selected)
       end
       if activeWebview then
         activeWebview:delete()
@@ -406,6 +401,14 @@ function M.showSaveDialog()
       end
     end
   end)
+
+  -- 初始化 hs.webview，傳入 usercontent controller
+  activeWebview = hs.webview.new(rect, { developerExtrasEnabled = true }, uc)
+  activeWebview:windowStyle(hs.webview.windowMasks.borderless)
+  activeWebview:closeOnEscape(true)
+  activeWebview:html(templateContent)
+  activeWebview:level(hs.drawing.windowLevels.floating)
+  activeWebview:allowTextEntry(true)
 
   activeWebview:show()
   
