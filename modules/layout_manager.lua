@@ -101,18 +101,46 @@ end
 -- ============================================================
 -- 儲存當前 layout
 -- ============================================================
-function M.save(name)
+function M.save(name, selectedWindows)
   ensureDir()
+  
+  -- 安全過濾檔名
+  local safeName = M.sanitizeName(name)
+  if safeName == "" then
+    hs.alert.show("無效的 Layout 名稱")
+    return false
+  end
+
+  local allWindows = captureWindows()
+  local finalWindows = allWindows
+
+  -- 如果有提供過濾清單，進行篩選
+  if selectedWindows then
+    finalWindows = {}
+    for _, win in ipairs(allWindows) do
+      local isSelected = false
+      for _, sel in ipairs(selectedWindows) do
+        -- 同時比對 app, title 與 z_index 以防碰撞
+        if sel.app == win.app and sel.title == win.title and sel.z_index == win.z_index then
+          isSelected = true
+          break
+        end
+      end
+      if isSelected then
+        table.insert(finalWindows, win)
+      end
+    end
+  end
 
   local layout = {
-    name       = name,
+    name       = safeName,
     created_at = os.time(),
     screens    = captureScreens(),
-    windows    = captureWindows(),
+    windows    = finalWindows,
   }
 
   local encoded = json.encode(layout, true) -- true = pretty print
-  local file = io.open(layoutPath(name), "w")
+  local file = io.open(layoutPath(safeName), "w")
   if not file then
     hs.alert.show("無法寫入 layout 檔案")
     return false
@@ -120,7 +148,7 @@ function M.save(name)
   file:write(encoded)
   file:close()
 
-  hs.alert.show(string.format("已儲存 layout：%s (%d 個視窗)", name, #layout.windows))
+  hs.alert.show(string.format("已儲存 layout：%s (%d 個視窗)", safeName, #layout.windows))
   return true
 end
 
@@ -267,6 +295,117 @@ function M.delete(name)
   else
     hs.alert.show("刪除失敗：" .. (err or "未知錯誤"))
     return false
+  end
+end
+
+-- ============================================================
+-- Webview 儲存對話視窗與過濾邏輯
+-- ============================================================
+
+-- 純文字替換函數（防止 gsub 的模式特有字元 % 崩潰）
+local function plainReplace(str, search, replace)
+  local result = {}
+  local start = 1
+  while true do
+    local pos = str:find(search, start, true) -- true 代表純文字搜尋
+    if not pos then
+      table.insert(result, str:sub(start))
+      break
+    end
+    table.insert(result, str:sub(start, pos - 1))
+    table.insert(result, replace)
+    start = pos + #search
+  end
+  return table.concat(result)
+end
+
+-- 轉義 HTML 腳本注入字元
+local function escapeJSONForHTML(jsonStr)
+  return jsonStr:gsub("<", "\\u003c")
+end
+
+local activeWebview = nil
+
+function M.showSaveDialog()
+  -- 如果已有開啟的視窗，先將其關閉
+  if activeWebview then
+    activeWebview:delete()
+    activeWebview = nil
+  end
+
+  local allWindows = captureWindows()
+  if #allWindows == 0 then
+    hs.alert.show("當前沒有可儲存的視窗")
+    return
+  end
+
+  -- 取得每個視窗的螢幕名稱以便呈現
+  local allScreens = hs.screen.allScreens()
+  for _, win in ipairs(allWindows) do
+    for _, scr in ipairs(allScreens) do
+      if tostring(scr:getUUID()) == win.screen_id then
+        win.screen_name = scr:name()
+        break
+      end
+    end
+    win.screen_name = win.screen_name or "未知螢幕"
+  end
+
+  local existingLayouts = M.list()
+
+  -- 動態取得範本檔案的路徑
+  local currentFile = debug.getinfo(1).source:sub(2)
+  local currentDir = currentFile:match("(.+)/[^/]+$") or "."
+  local templatePath = currentDir .. "/layout_selector_tmpl.html"
+  
+  local templateFile = io.open(templatePath, "r")
+  if not templateFile then
+    hs.alert.show("無法讀取視窗選擇器範本：" .. templatePath)
+    return
+  end
+  local templateContent = templateFile:read("*all")
+  templateFile:close()
+
+  -- 安全編碼並進行純文字替換
+  local windowsJson = escapeJSONForHTML(json.encode(allWindows))
+  local layoutsJson = escapeJSONForHTML(json.encode(existingLayouts))
+
+  templateContent = plainReplace(templateContent, "{{WINDOWS_JSON}}", windowsJson)
+  templateContent = plainReplace(templateContent, "{{LAYOUTS_JSON}}", layoutsJson)
+
+  -- 初始化 hs.webview
+  local rect = hs.geometry.rect(0, 0, 600, 500)
+  activeWebview = hs.webview.new(rect, { developerExtrasEnabled = true })
+  activeWebview:windowStyle(hs.webview.windowMasks.borderless)
+  activeWebview:closeOnEscape(true)
+  activeWebview:html(templateContent)
+
+  -- 設定 callback 處理來自 JavaScript 的訊息
+  activeWebview:userCallback(function(msg)
+    if not msg then return end
+    if msg.action == "cancel" then
+      if activeWebview then
+        activeWebview:delete()
+        activeWebview = nil
+      end
+    elseif msg.action == "save" then
+      if msg.name and msg.name ~= "" then
+        M.save(msg.name, msg.selected)
+      end
+      if activeWebview then
+        activeWebview:delete()
+        activeWebview = nil
+      end
+    end
+  end)
+
+  activeWebview:show()
+  
+  -- 將視窗置中並取得焦點
+  local win = activeWebview:hswindow()
+  if win then
+    win:centerOnScreen()
+    win:focus()
   end
 end
 
