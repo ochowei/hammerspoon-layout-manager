@@ -194,6 +194,7 @@
     // Lua 注入的佔位符
     const windows = JSON.parse(document.getElementById('windows-json').textContent);
     const existingLayouts = JSON.parse(document.getElementById('layouts-json').textContent);
+    let overwriteConfirmed = false;
 
     // 初始化渲染
     const listContainer = document.getElementById('window-list');
@@ -249,7 +250,7 @@
         checkbox.checked = true;
         checkbox.dataset.app = win.app;
         checkbox.dataset.title = win.title || '';
-        checkbox.dataset.zIndex = win.z_index;
+        checkbox.dataset.id = win.id;
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = win.title || '(無標題視窗)';
@@ -266,6 +267,12 @@
     // 重名檢測監聽器
     inputField.addEventListener('input', () => {
       errorMsg.style.display = 'none';
+      overwriteConfirmed = false;
+      const btnSave = document.querySelector('.btn-save');
+      btnSave.textContent = "儲存 Layout";
+      btnSave.style.background = "#007acc";
+      btnSave.style.boxShadow = "0 4px 12px rgba(0,122,204,0.3)";
+
       const name = inputField.value.trim();
       const safeName = name.replace(/[\/\\?*%&|^`;<>:]/g, "");
       const isDuplicate = existingLayouts.some(layout => layout.toLowerCase() === safeName.toLowerCase());
@@ -307,11 +314,13 @@
       }
 
       const isDuplicate = existingLayouts.some(layout => layout.toLowerCase() === safeName.toLowerCase());
-      if (isDuplicate) {
-        const confirmOverwrite = confirm("此配置已存在，是否要覆蓋儲存？");
-        if (!confirmOverwrite) {
-          return;
-        }
+      if (isDuplicate && !overwriteConfirmed) {
+        overwriteConfirmed = true;
+        const btnSave = document.querySelector('.btn-save');
+        btnSave.textContent = "確認覆蓋儲存";
+        btnSave.style.background = "#ff5f56";
+        btnSave.style.boxShadow = "0 4px 12px rgba(255,95,86,0.3)";
+        return;
       }
 
       const selected = [];
@@ -319,9 +328,9 @@
       checkboxes.forEach(cb => {
         if (cb.checked) {
           selected.push({
+            id: cb.getAttribute('data-id'),
             app: cb.getAttribute('data-app'),
-            title: cb.getAttribute('data-title'),
-            z_index: parseInt(cb.getAttribute('data-z-index'), 10)
+            title: cb.getAttribute('data-title')
           });
         }
       });

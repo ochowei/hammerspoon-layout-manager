@@ -61,6 +61,7 @@ local function captureWindows()
       local frame  = win:frame()
 
       table.insert(windows, {
+        id        = win:id(),
         app       = app and app:name() or "Unknown",
         title     = win:title() or "",
         screen_id = tostring(screen:getUUID()),
@@ -120,8 +121,7 @@ function M.save(name, selectedWindows)
     for _, win in ipairs(allWindows) do
       local isSelected = false
       for _, sel in ipairs(selectedWindows) do
-        -- 同時比對 app, title 與 z_index 以防碰撞
-        if sel.app == win.app and sel.title == win.title and sel.z_index == win.z_index then
+        if sel.id and tonumber(sel.id) == win.id then
           isSelected = true
           break
         end
@@ -379,6 +379,7 @@ function M.showSaveDialog()
   activeWebview:windowStyle(hs.webview.windowMasks.borderless)
   activeWebview:closeOnEscape(true)
   activeWebview:html(templateContent)
+  activeWebview:level(hs.drawing.windowLevels.floating)
 
   -- 設定 callback 處理來自 JavaScript 的訊息
   activeWebview:userCallback(function(msg)
