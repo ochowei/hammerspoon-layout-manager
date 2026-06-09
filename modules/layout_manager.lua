@@ -374,8 +374,8 @@ function M.showSaveDialog()
   templateContent = plainReplace(templateContent, "{{LAYOUTS_JSON}}", layoutsJson)
 
   -- 預先計算置中座標，避免 hswindow() 的非同步 race condition
-  local mainScreen = hs.screen.mainScreen()
-  local screenFrame = mainScreen:frame()
+  local mainScreen = hs.screen.mainScreen() or hs.screen.primaryScreen()
+  local screenFrame = mainScreen and mainScreen:frame() or { x = 0, y = 0, w = 1920, h = 1080 }
   local w, h = 600, 500
   local x = screenFrame.x + (screenFrame.w - w) / 2
   local y = screenFrame.y + (screenFrame.h - h) / 2
@@ -409,11 +409,15 @@ function M.showSaveDialog()
 
   activeWebview:show()
   
-  -- 取得焦點
-  local win = activeWebview:hswindow()
-  if win then
-    win:focus()
-  end
+  -- 延遲取得焦點，以防非同步視窗尚未建立完成
+  hs.timer.doAfter(0.1, function()
+    if activeWebview then
+      local win = activeWebview:hswindow()
+      if win then
+        win:focus()
+      end
+    end
+  end)
 end
 
 return M
