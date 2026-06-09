@@ -373,8 +373,15 @@ function M.showSaveDialog()
   templateContent = plainReplace(templateContent, "{{WINDOWS_JSON}}", windowsJson)
   templateContent = plainReplace(templateContent, "{{LAYOUTS_JSON}}", layoutsJson)
 
+  -- 預先計算置中座標，避免 hswindow() 的非同步 race condition
+  local mainScreen = hs.screen.mainScreen()
+  local screenFrame = mainScreen:frame()
+  local w, h = 600, 500
+  local x = screenFrame.x + (screenFrame.w - w) / 2
+  local y = screenFrame.y + (screenFrame.h - h) / 2
+  local rect = hs.geometry.rect(x, y, w, h)
+
   -- 初始化 hs.webview
-  local rect = hs.geometry.rect(0, 0, 600, 500)
   activeWebview = hs.webview.new(rect, { developerExtrasEnabled = true })
   activeWebview:windowStyle(hs.webview.windowMasks.borderless)
   activeWebview:closeOnEscape(true)
@@ -402,10 +409,9 @@ function M.showSaveDialog()
 
   activeWebview:show()
   
-  -- 將視窗置中並取得焦點
+  -- 取得焦點
   local win = activeWebview:hswindow()
   if win then
-    win:centerOnScreen()
     win:focus()
   end
 end
