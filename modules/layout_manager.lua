@@ -40,7 +40,8 @@ local function layoutPath(name)
 end
 
 function M.sanitizeName(name)
-  if not name then return "" end
+  if name == nil then return "" end
+  name = tostring(name):gsub("^%s*(.-)%s*$", "%1")
   return name:gsub('[%/%\\%?%*%%&%|%^%`%;%<%>%:]', "")
 end
 
