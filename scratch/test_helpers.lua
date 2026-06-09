@@ -5,8 +5,9 @@ _G.hs = {
   fs = {}
 }
 
--- Add current directory to package path to load modules
-package.path = "./?.lua;" .. package.path
+-- Add dynamic project root directory to package path to load modules from anywhere
+local script_dir = debug.getinfo(1).source:sub(2):match("(.+)/[^/]+$") or "."
+package.path = script_dir .. "/../?.lua;" .. package.path
 local layout_manager = require("modules.layout_manager")
 
 -- 測試用例
