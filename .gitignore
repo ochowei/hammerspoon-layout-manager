@@ -20,3 +20,7 @@ console.log
 
 # Environment variables file
 .env
+
+# Local test sandbox
+test-sandbox/
+
