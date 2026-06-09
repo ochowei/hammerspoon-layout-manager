@@ -39,6 +39,11 @@ local function layoutPath(name)
   return LAYOUT_DIR .. "/" .. name .. ".json"
 end
 
+function M.sanitizeName(name)
+  if not name then return "" end
+  return name:gsub('[%/%\\%?%*%%&%|%^%`%;%<%>%:]', "")
+end
+
 -- ============================================================
 -- 收集當前所有可見視窗的狀態
 -- ============================================================
