@@ -108,6 +108,10 @@
       margin-top: 3px;
       cursor: pointer;
     }
+    .window-item input[type="checkbox"]:focus-visible {
+      outline: 2px solid #007acc;
+      outline-offset: 2px;
+    }
     .footer {
       padding: 16px 20px;
       border-top: 1px solid #2f2f38;
@@ -188,45 +192,60 @@
     const errorMsg = document.getElementById('error-msg');
     const warningMsg = document.getElementById('warning-msg');
 
-    // 依 App 分組視窗
+    // 依 App 及 螢幕 分組視窗
     const groups = {};
     windows.forEach(win => {
-      if (!groups[win.app]) {
-        groups[win.app] = {
+      const groupKey = `${win.app}_${win.screen_id}`;
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
           app: win.app,
           screen_name: win.screen_name,
           items: []
         };
       }
-      groups[win.app].items.push(win);
+      groups[groupKey].items.push(win);
     });
 
-    // 生成 HTML
-    Object.keys(groups).forEach(appKey => {
-      const g = groups[appKey];
+    // 生成 HTML (避免 XSS 安全性問題)
+    Object.keys(groups).forEach(groupKey => {
+      const g = groups[groupKey];
       const groupEl = document.createElement('div');
       groupEl.className = 'app-group';
 
       const headerEl = document.createElement('div');
       headerEl.className = 'app-header';
-      headerEl.innerHTML = `
-        <span class="app-title">${g.app}</span>
-        <span class="screen-badge">🖥️ ${g.screen_name}</span>
-      `;
+      
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'app-title';
+      titleSpan.textContent = g.app;
+
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = 'screen-badge';
+      badgeSpan.textContent = `🖥️ ${g.screen_name}`;
+
+      headerEl.appendChild(titleSpan);
+      headerEl.appendChild(badgeSpan);
       groupEl.appendChild(headerEl);
 
       const itemsEl = document.createElement('div');
       itemsEl.className = 'window-items';
 
-      g.items.forEach((win, index) => {
+      g.items.forEach(win => {
         const itemEl = document.createElement('label');
         itemEl.className = 'window-item';
-        const checkId = `win_${win.z_index}`;
-        const winTitle = win.title || '';
-        itemEl.innerHTML = `
-          <input type="checkbox" id="${checkId}" checked data-app="${win.app}" data-title="${winTitle.replace(/"/g, '&quot;')}">
-          <span>${win.title || '(無標題視窗)'}</span>
-        `;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `win_${win.z_index}`;
+        checkbox.checked = true;
+        checkbox.dataset.app = win.app;
+        checkbox.dataset.title = win.title || '';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = win.title || '(無標題視窗)';
+
+        itemEl.appendChild(checkbox);
+        itemEl.appendChild(titleSpan);
         itemsEl.appendChild(itemEl);
       });
 
@@ -243,6 +262,13 @@
         warningMsg.style.display = 'block';
       } else {
         warningMsg.style.display = 'none';
+      }
+    });
+
+    // 按下 Enter 鍵自動儲存
+    inputField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        onSave();
       }
     });
 
