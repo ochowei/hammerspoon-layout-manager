@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1e1e24;
+      color: #f0f0f5;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      user-select: none;
+      overflow: hidden;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    .header {
+      background: #25252d;
+      padding: 16px 20px;
+      border-bottom: 1px solid #2f2f38;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #a0a0b0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #3e3e4a;
+      background: #15151a;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .form-group input:focus {
+      border-color: #007acc;
+    }
+    .window-list-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #a0a0b0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .app-group {
+      background: #25252d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #2f2f38;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #32323d;
+    }
+    .app-title {
+      font-weight: bold;
+      color: #4fc1ff;
+    }
+    .screen-badge {
+      font-size: 11px;
+      background: #32323d;
+      color: #a0a0b0;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .window-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .window-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      color: #d0d0d8;
+    }
+    .window-item input[type="checkbox"] {
+      margin-top: 3px;
+      cursor: pointer;
+    }
+    .footer {
+      padding: 16px 20px;
+      border-top: 1px solid #2f2f38;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #1e1e24;
+    }
+    button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-cancel {
+      background: #32323d;
+      color: #fff;
+    }
+    .btn-cancel:hover {
+      background: #3e3e4a;
+    }
+    .btn-save {
+      background: #007acc;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,122,204,0.3);
+    }
+    .btn-save:hover {
+      background: #0098ff;
+    }
+    .error-msg {
+      color: #ff5f56;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+    }
+    .warning-msg {
+      color: #ffbd2e;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">💾 儲存視窗配置 (Save Layout)</div>
+    <div class="content">
+      <div class="form-group">
+        <label for="layout-name">Layout 名稱</label>
+        <input type="text" id="layout-name" placeholder="例如: Work, Coding, Browsing..." autofocus>
+        <div id="error-msg" class="error-msg">請輸入 Layout 名稱</div>
+        <div id="warning-msg" class="warning-msg">此名稱已存在，儲存將覆蓋舊配置</div>
+      </div>
+      
+      <div class="window-list-label">選擇要包含的視窗</div>
+      <div id="window-list">
+        <!-- 視窗列表由 JS 動態生成 -->
+      </div>
+    </div>
+    
+    <div class="footer">
+      <button class="btn-cancel" onclick="onCancel()">取消</button>
+      <button class="btn-save" onclick="onSave()">儲存 Layout</button>
+    </div>
+  </div>
+
+  <script>
+    // Lua 注入的佔位符
+    const windows = {{WINDOWS_JSON}};
+    const existingLayouts = {{LAYOUTS_JSON}};
+
+    // 初始化渲染
+    const listContainer = document.getElementById('window-list');
+    const inputField = document.getElementById('layout-name');
+    const errorMsg = document.getElementById('error-msg');
+    const warningMsg = document.getElementById('warning-msg');
+
+    // 依 App 分組視窗
+    const groups = {};
+    windows.forEach(win => {
+      if (!groups[win.app]) {
+        groups[win.app] = {
+          app: win.app,
+          screen_name: win.screen_name,
+          items: []
+        };
+      }
+      groups[win.app].items.push(win);
+    });
+
+    // 生成 HTML
+    Object.keys(groups).forEach(appKey => {
+      const g = groups[appKey];
+      const groupEl = document.createElement('div');
+      groupEl.className = 'app-group';
+
+      const headerEl = document.createElement('div');
+      headerEl.className = 'app-header';
+      headerEl.innerHTML = `
+        <span class="app-title">${g.app}</span>
+        <span class="screen-badge">🖥️ ${g.screen_name}</span>
+      `;
+      groupEl.appendChild(headerEl);
+
+      const itemsEl = document.createElement('div');
+      itemsEl.className = 'window-items';
+
+      g.items.forEach((win, index) => {
+        const itemEl = document.createElement('label');
+        itemEl.className = 'window-item';
+        const checkId = `win_${win.z_index}`;
+        const winTitle = win.title || '';
+        itemEl.innerHTML = `
+          <input type="checkbox" id="${checkId}" checked data-app="${win.app}" data-title="${winTitle.replace(/"/g, '&quot;')}">
+          <span>${win.title || '(無標題視窗)'}</span>
+        `;
+        itemsEl.appendChild(itemEl);
+      });
+
+      groupEl.appendChild(itemsEl);
+      listContainer.appendChild(groupEl);
+    });
+
+    // 重名檢測監聽器
+    inputField.addEventListener('input', () => {
+      errorMsg.style.display = 'none';
+      const name = inputField.value.trim();
+      const safeName = name.replace(/[\/\\?*%&|^`;<>:]/g, "");
+      if (safeName && existingLayouts.includes(safeName)) {
+        warningMsg.style.display = 'block';
+      } else {
+        warningMsg.style.display = 'none';
+      }
+    });
+
+    // 快速鍵監聽 ESC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    });
+
+    function onCancel() {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hammerspoon) {
+        window.webkit.messageHandlers.hammerspoon.postMessage({ action: "cancel" });
+      }
+    }
+
+    function onSave() {
+      const name = inputField.value.trim();
+      if (!name) {
+        errorMsg.style.display = 'block';
+        inputField.focus();
+        return;
+      }
+
+      const selected = [];
+      const checkboxes = listContainer.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          selected.push({
+            app: cb.getAttribute('data-app'),
+            title: cb.getAttribute('data-title')
+          });
+        }
+      });
+
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hammerspoon) {
+        window.webkit.messageHandlers.hammerspoon.postMessage({
+          action: "save",
+          name: name,
+          selected: selected
+        });
+      }
+    }
+  </script>
+</body>
+</html>
