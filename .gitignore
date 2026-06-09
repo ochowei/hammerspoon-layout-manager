@@ -24,3 +24,5 @@ console.log
 # Local test sandbox
 test-sandbox/
 
+# Superpowers Brainstorming
+.superpowers/
