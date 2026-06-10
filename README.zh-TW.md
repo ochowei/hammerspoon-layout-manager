@@ -6,9 +6,9 @@
 
 ## 功能
 
-- 💾 **儲存當前 layout**：把所有可見視窗的位置、大小、所在螢幕、前後順序存成 JSON
-- 📐 **載入 layout**：一鍵還原視窗排列；若有 app 沒啟動會跳出對話框問你
-- 🎹 **快捷鍵**：`Cmd+Alt+S` 儲存、`Cmd+Alt+L` 載入、`Cmd+Alt+D` 刪除
+- 💾 **儲存當前 layout**：開啟互動式 Webview 視窗清單，可勾選想要儲存的視窗（擷取位置、大小、螢幕及 z-order）
+- 📐 **載入 layout**：開啟互動式 Webview 選擇器，支援用滑鼠或鍵盤快捷鍵（`↑`/`↓`/`Enter`/`Backspace`）進行搜尋、切換或刪除 layout
+- 🎹 **快捷鍵**：`Cmd+Alt+S` 儲存 layout、`Cmd+Alt+L` 載入 layout、`Cmd+Alt+D` 刪除 layout（經由 Hammerspoon 原生選擇器）
 - 🚀 **Raycast 整合**：透過 `hammerspoon://` URL scheme，從 Raycast 直接呼叫
 
 ## 安裝
@@ -73,8 +73,13 @@ git clone https://github.com/<你的帳號>/hammerspoon-layout-manager.git ~/.ha
 ### URL Scheme（給 Raycast / Shortcuts / 其他工具）
 
 ```bash
+# 開啟儲存對話框並預填名稱為 "work"
 open "hammerspoon://savelayout?name=work"
-open "hammerspoon://loadlayout?name=work"
+
+# 開啟載入選擇器對話框
+open "hammerspoon://loadlayout"
+
+# 直接刪除名稱為 "work" 的 layout
 open "hammerspoon://deletelayout?name=work"
 ```
 
@@ -90,13 +95,16 @@ open "hammerspoon://deletelayout?name=work"
 
 ```
 hammerspoon-layout-manager/
-├── README.md
+├── README.md                   英文說明文件
+├── README.zh-TW.md             繁體中文說明文件（本檔案）
 ├── LICENSE
 ├── .gitignore
 ├── init.lua                    入口，載入模組與綁定快捷鍵
 ├── modules/
-│   ├── layout_manager.lua      核心：save / load / list / delete
-│   └── url_handler.lua         hammerspoon:// URL 處理
+│   ├── layout_manager.lua      核心邏輯：save / load / list / delete
+│   ├── url_handler.lua         hammerspoon:// URL 處理
+│   ├── layout_selector_tmpl.html 儲存 layout UI 範本（Webview）
+│   └── layout_loader_tmpl.html   載入 layout UI 範本（Webview）
 ├── layouts/                    儲存的 layout JSON 檔（被 gitignore）
 │   └── .gitkeep
 └── raycast/                    Raycast Script Commands
