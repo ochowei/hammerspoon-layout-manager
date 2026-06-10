@@ -25,28 +25,9 @@ hs.hotkey.bind(hyper, "S", function()
   layoutManager.showSaveDialog()
 end)
 
--- Cmd + Alt + L：載入 layout（會彈出選單讓你選）
+-- Cmd + Alt + L：載入 layout（彈出 webview 選擇器）
 hs.hotkey.bind(hyper, "L", function()
-  local layouts = layoutManager.list()
-  if #layouts == 0 then
-    hs.alert.show("尚無已儲存的 layout")
-    return
-  end
-
-  -- 用 chooser 做選單
-  local choices = {}
-  for _, name in ipairs(layouts) do
-    table.insert(choices, { text = name })
-  end
-
-  local chooser = hs.chooser.new(function(choice)
-    if choice then
-      layoutManager.load(choice.text)
-    end
-  end)
-  chooser:choices(choices)
-  chooser:placeholderText("選擇要載入的 layout")
-  chooser:show()
+  layoutManager.showLoadDialog()
 end)
 
 -- Cmd + Alt + D：刪除 layout
