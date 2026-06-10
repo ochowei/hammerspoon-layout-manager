@@ -58,7 +58,7 @@ git clone https://github.com/<你的帳號>/hammerspoon-layout-manager.git ~/.ha
    ```
 2. 在 Raycast 中：`Settings → Extensions → Script Commands → Add Script Directory`
 3. 選擇本 repo 的 `raycast/` 資料夾
-4. 在 Raycast 搜尋 `Save Window Layout` / `Load Window Layout` / `List Window Layouts`
+4. 在 Raycast 搜尋 `Save Window Layout` / `Load Window Layout`
 
 ## 使用方式
 
@@ -75,7 +75,6 @@ git clone https://github.com/<你的帳號>/hammerspoon-layout-manager.git ~/.ha
 ```bash
 open "hammerspoon://savelayout?name=work"
 open "hammerspoon://loadlayout?name=work"
-open "hammerspoon://listlayouts"
 open "hammerspoon://deletelayout?name=work"
 ```
 
@@ -102,8 +101,7 @@ hammerspoon-layout-manager/
 │   └── .gitkeep
 └── raycast/                    Raycast Script Commands
     ├── save-layout.sh
-    ├── load-layout.sh
-    └── list-layouts.sh
+    └── load-layout.sh
 ```
 
 ## 已知限制與後續可改進

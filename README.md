@@ -58,7 +58,7 @@ git clone https://github.com/<your-username>/hammerspoon-layout-manager.git ~/.h
    ```
 2. In Raycast: `Settings → Extensions → Script Commands → Add Script Directory`
 3. Select the `raycast/` folder of this repo
-4. Search for `Save Window Layout` / `Load Window Layout` / `List Window Layouts` in Raycast
+4. Search for `Save Window Layout` / `Load Window Layout` in Raycast
 
 ## Usage
 
@@ -77,7 +77,6 @@ For Raycast, Shortcuts.app, or any other launcher:
 ```bash
 open "hammerspoon://savelayout?name=work"
 open "hammerspoon://loadlayout?name=work"
-open "hammerspoon://listlayouts"
 open "hammerspoon://deletelayout?name=work"
 ```
 
@@ -113,8 +112,7 @@ hammerspoon-layout-manager/
 │   └── .gitkeep
 └── raycast/                    Raycast Script Commands
     ├── save-layout.sh
-    ├── load-layout.sh
-    └── list-layouts.sh
+    └── load-layout.sh
 ```
 
 ## How it works
