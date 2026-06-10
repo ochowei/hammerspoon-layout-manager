@@ -59,7 +59,6 @@ end)
 -- 註冊後可以這樣呼叫：
 --   open "hammerspoon://savelayout?name=work"
 --   open "hammerspoon://loadlayout?name=work"
---   open "hammerspoon://listlayouts"
 urlHandler.register(layoutManager)
 
 -- 啟動完成提示
