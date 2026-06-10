@@ -6,7 +6,6 @@
   支援的 URL：
     hammerspoon://savelayout?name=<name>
     hammerspoon://loadlayout?name=<name>
-    hammerspoon://listlayouts            (回傳到 console / alert)
     hammerspoon://deletelayout?name=<name>
 --]]
 
@@ -26,18 +25,6 @@ function M.register(layoutManager)
   -- loadlayout
   hs.urlevent.bind("loadlayout", function(eventName, params)
     layoutManager.showLoadDialog()
-  end)
-
-  -- listlayouts
-  hs.urlevent.bind("listlayouts", function()
-    local names = layoutManager.list()
-    if #names == 0 then
-      hs.alert.show("尚無已儲存的 layout")
-    else
-      hs.alert.show("已儲存：\n" .. table.concat(names, "\n"), 3)
-    end
-    -- 也印到 console，方便 debug
-    print("[LayoutManager] Layouts:", hs.inspect(names))
   end)
 
   -- deletelayout
