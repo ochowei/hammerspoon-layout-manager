@@ -6,9 +6,9 @@ A macOS window layout manager built with [Hammerspoon](https://www.hammerspoon.o
 
 ## Features
 
-- 💾 **Save current layout** — captures position, size, screen, and z-order of all visible windows into JSON
-- 📐 **Load layout** — restores windows to their saved positions; prompts you if any apps aren't running
-- 🎹 **Keyboard shortcuts** — `Cmd+Alt+S` to save, `Cmd+Alt+L` to load, `Cmd+Alt+D` to delete
+- 💾 **Save current layout** — opens an interactive Webview window list to let you select which windows to save (capturing position, size, screen, and z-order)
+- 📐 **Load layout** — opens an interactive Webview selector to let you search, select, or delete layouts with mouse or keyboard shortcuts (`↑`/`↓`/`Enter`/`Backspace`)
+- 🎹 **Keyboard shortcuts** — `Cmd+Alt+S` to save layout, `Cmd+Alt+L` to load layout, `Cmd+Alt+D` to delete layout (via Hammerspoon chooser fallback)
 - 🚀 **Raycast integration** — trigger layouts via the `hammerspoon://` URL scheme
 
 ## Installation
@@ -75,8 +75,13 @@ git clone https://github.com/<your-username>/hammerspoon-layout-manager.git ~/.h
 For Raycast, Shortcuts.app, or any other launcher:
 
 ```bash
+# Opens the save dialog with the name pre-filled as "work"
 open "hammerspoon://savelayout?name=work"
-open "hammerspoon://loadlayout?name=work"
+
+# Opens the load dialog/picker
+open "hammerspoon://loadlayout"
+
+# Deletes the layout named "work" directly
 open "hammerspoon://deletelayout?name=work"
 ```
 
@@ -106,8 +111,10 @@ hammerspoon-layout-manager/
 ├── .gitignore
 ├── init.lua                    Entry point: loads modules, binds shortcuts
 ├── modules/
-│   ├── layout_manager.lua      Core: save / load / list / delete
-│   └── url_handler.lua         hammerspoon:// URL scheme handler
+│   ├── layout_manager.lua      Core logic: save / load / list / delete
+│   ├── url_handler.lua         hammerspoon:// URL scheme handler
+│   ├── layout_selector_tmpl.html Save layout UI template (webview)
+│   └── layout_loader_tmpl.html   Load layout UI template (webview)
 ├── layouts/                    Stored layout JSON files (gitignored)
 │   └── .gitkeep
 └── raycast/                    Raycast Script Commands
@@ -138,7 +145,7 @@ On load, windows are matched to running apps by name, then to specific windows b
 
 - [ ] Poll for app readiness instead of fixed wait time
 - [ ] Smarter window matching (frame similarity as fallback)
-- [ ] Overwrite confirmation when saving over an existing layout
+- [x] Overwrite confirmation when saving over an existing layout
 - [ ] Predefined layout templates (declare apps + positions, launch and arrange in one shot)
 - [ ] Layout preview in the picker (window count, screen count, thumbnails)
 - [ ] Auto-trigger on display configuration change (e.g. external monitor connect)
