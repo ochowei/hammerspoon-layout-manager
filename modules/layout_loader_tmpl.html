@@ -64,8 +64,31 @@
       border-color: #007acc;
       box-shadow: 0 0 0 1px #007acc;
     }
+    .layout-item.selected {
+      background: #2a2a34;
+      border-color: #007acc;
+      box-shadow: 0 0 0 1px #007acc;
+    }
     .layout-item:active {
       background: #007acc22;
+    }
+    .hint-bar {
+      display: flex;
+      gap: 16px;
+      padding: 8px 20px;
+      background: #1a1a20;
+      border-top: 1px solid #2f2f38;
+      font-size: 11px;
+      color: #606070;
+    }
+    .hint-bar kbd {
+      background: #32323d;
+      color: #a0a0b0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 10px;
+      border: 1px solid #3e3e4a;
     }
     .layout-info {
       display: flex;
@@ -201,6 +224,12 @@
       </div>
     </div>
 
+    <div class="hint-bar">
+      <span><kbd>↑</kbd><kbd>↓</kbd> 選擇</span>
+      <span><kbd>Enter</kbd> 載入</span>
+      <span><kbd>⌫</kbd> 刪除</span>
+      <span><kbd>Esc</kbd> 取消</span>
+    </div>
     <div class="footer">
       <button class="btn-cancel" onclick="onCancel()">取消</button>
     </div>
@@ -211,6 +240,8 @@
   <script>
     const layouts = JSON.parse(document.getElementById('layouts-json').textContent);
     const listContainer = document.getElementById('layout-list');
+    let selectedIndex = -1;
+    let confirmOverlayEl = null;
 
     function render() {
       listContainer.innerHTML = '';
@@ -223,9 +254,10 @@
         return;
       }
 
-      layouts.forEach(layout => {
+      layouts.forEach((layout, index) => {
         const item = document.createElement('div');
         item.className = 'layout-item';
+        item.dataset.index = index;
 
         const info = document.createElement('div');
         info.className = 'layout-info';
@@ -274,13 +306,37 @@
           onLoad(layout.name);
         });
 
+        // 滑鼠懸停時也更新選取狀態
+        item.addEventListener('mouseenter', () => {
+          setSelected(index);
+        });
+
         listContainer.appendChild(item);
       });
+
+      // 預設選取第一項
+      if (layouts.length > 0) {
+        setSelected(0);
+      }
+    }
+
+    function setSelected(index) {
+      if (layouts.length === 0) return;
+      selectedIndex = Math.max(0, Math.min(index, layouts.length - 1));
+      const items = listContainer.querySelectorAll('.layout-item');
+      items.forEach((el, i) => {
+        el.classList.toggle('selected', i === selectedIndex);
+      });
+      // 確保選中項目可見
+      if (items[selectedIndex]) {
+        items[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
     }
 
     function showDeleteConfirm(name) {
       const overlay = document.createElement('div');
       overlay.className = 'confirm-overlay';
+      confirmOverlayEl = overlay;
 
       const dialog = document.createElement('div');
       dialog.className = 'confirm-dialog';
@@ -299,15 +355,36 @@
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'btn-confirm-cancel';
       cancelBtn.textContent = '取消';
-      cancelBtn.addEventListener('click', () => overlay.remove());
+      cancelBtn.addEventListener('click', () => dismissConfirm());
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn-confirm-delete';
       deleteBtn.textContent = '刪除';
       deleteBtn.addEventListener('click', () => {
-        overlay.remove();
+        dismissConfirm();
         onDelete(name);
       });
+
+      // 對話框鍵盤事件
+      function onDialogKey(e) {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          dismissConfirm();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          dismissConfirm();
+          onDelete(name);
+        }
+      }
+
+      function dismissConfirm() {
+        overlay.removeEventListener('keydown', onDialogKey);
+        overlay.remove();
+        confirmOverlayEl = null;
+      }
+
+      overlay.addEventListener('keydown', onDialogKey);
+      overlay.setAttribute('tabindex', '-1');
 
       actions.appendChild(cancelBtn);
       actions.appendChild(deleteBtn);
@@ -316,6 +393,7 @@
       dialog.appendChild(actions);
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
+      overlay.focus();
     }
 
     function onLoad(name) {
@@ -332,6 +410,10 @@
       const idx = layouts.findIndex(l => l.name === name);
       if (idx !== -1) {
         layouts.splice(idx, 1);
+        // 調整選取索引，避免超出範圍
+        if (selectedIndex >= layouts.length) {
+          selectedIndex = layouts.length - 1;
+        }
         render();
       }
     }
@@ -342,10 +424,42 @@
       }
     }
 
-    // 快速鍵監聽 ESC
+    // 鍵盤導覽
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        onCancel();
+      // 如果刪除確認對話框開啟，由對話框自己處理
+      if (confirmOverlayEl) return;
+
+      switch (e.key) {
+        case 'Escape':
+          onCancel();
+          break;
+        case 'ArrowUp':
+        case 'k':
+          e.preventDefault();
+          if (layouts.length > 0) {
+            setSelected(selectedIndex <= 0 ? layouts.length - 1 : selectedIndex - 1);
+          }
+          break;
+        case 'ArrowDown':
+        case 'j':
+          e.preventDefault();
+          if (layouts.length > 0) {
+            setSelected(selectedIndex >= layouts.length - 1 ? 0 : selectedIndex + 1);
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < layouts.length) {
+            onLoad(layouts[selectedIndex].name);
+          }
+          break;
+        case 'Backspace':
+        case 'Delete':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < layouts.length) {
+            showDeleteConfirm(layouts[selectedIndex].name);
+          }
+          break;
       }
     });
 
